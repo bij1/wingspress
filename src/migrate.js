@@ -10,7 +10,7 @@ import { data } from '../content';
 const wp = new WPAPI({
     endpoint: process.env.WP_ENDPOINT,
     username: process.env.WP_USER,
-    password: process.env.WP_PASSWORD
+    password: process.env.WP_PASSWORD,
 });
 
 const migrate = async (node, resource) => {
@@ -87,12 +87,14 @@ const download = async (location) => {
     return [result, decodeURIComponent(path.basename(pathname))];
 }
 
-data.articles.edges.reduce(async (previous, {node}) => {
-    await previous;
-    return migrate(node, () => wp.posts());
-}, Promise.resolve());
+(async () => {
+    await data.articles.edges.reduce(async (previous, {node}) => {
+        await previous;
+        return migrate(node, () => wp.posts());
+    }, Promise.resolve());
 
-data.pages.edges.reduce(async (previous, {node}) => {
-    await previous;
-    return migrate(node, () => wp.pages());
-}, Promise.resolve());
+    await data.pages.edges.reduce(async (previous, {node}) => {
+        await previous;
+        return migrate(node, () => wp.pages());
+    }, Promise.resolve());
+})()
