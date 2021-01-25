@@ -1,0 +1,22 @@
+{
+  "name": "wingspress",
+  "scripts": {
+    "fetch": "babel-node src/fetch",
+    "migrate": "babel-node -r ./browser-env src/migrate"
+  },
+  "dependencies": {
+    "@wordpress/block-library": "^2.27.2",
+    "@wordpress/blocks": "^6.25.1",
+    "browser-env": "^3.3.0",
+    "got": "^11.8.1",
+    "mobiledoc-wp-renderer": "./mobiledoc-wp-renderer",
+    "simple-dom": "^1.4.0",
+    "wpapi": "^1.2.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.12.10",
+    "@babel/core": "^7.12.10",
+    "@babel/node": "^7.12.10",
+    "@babel/preset-env": "^7.12.11"
+  }
+}

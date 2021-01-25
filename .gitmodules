@@ -1,0 +1,3 @@
+[submodule "mobiledoc-wp-renderer"]
+	path = mobiledoc-wp-renderer
+	url = git@github.com:bij1/mobiledoc-wp-renderer.git
