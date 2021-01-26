@@ -10,7 +10,7 @@ import { data } from '../content';
 const wp = new WPAPI({
     endpoint: process.env.WP_ENDPOINT,
     username: process.env.WP_USER,
-    password: process.env.WP_PASSWORD,
+    password: process.env.WP_PASSWORD
 });
 
 const migrate = async (node, resource) => {
@@ -58,24 +58,30 @@ const migrate = async (node, resource) => {
         }
     }
     catch (e) {
-        console.error(`failed to upload featured ${url}`)
+        console.error(`failed to upload featured "${url}"`)
     }
     
     console.log(`creating "${node.slug}"`);
-    const { id } = await resource().create({
-        title: node.title,
-        excerpt: node.featured.description,
-        slug: node.slug,
-        featured_media: featured && featured.id,
-        content: serialize(rendered.result),
-        date_gmt: new Date(node.publishedAt),
-        status: 'publish'
-    })
+    let id
+    try {
+        let { id } = await resource().create({
+            title: node.title,
+            excerpt: node.featured.description,
+            slug: node.slug,
+            featured_media: featured && featured.id,
+            content: serialize(rendered.result),
+            date_gmt: new Date(node.publishedAt),
+            status: 'publish',
+        })
+    }
+    catch (e) {
+        console.error(`failed to create "${url}"`)
+    }
     
     await Promise.all(mediaIds.map(async (mediaId) => {
         if (mediaId) wp.media().id(mediaId).update({
             post: id,
-            date_gmt: new Date(node.publishedAt),            
+            date_gmt: new Date(node.publishedAt)
         });
     }));
 }
@@ -87,7 +93,19 @@ const download = async (location) => {
     return [result, decodeURIComponent(path.basename(pathname))];
 }
 
+wp.vacatures = wp.registerRoute('wp/v2', 'vacatures/(?P<id>)');
+
+const findVacatures = () => {
+    const { node } = data.pages.edges.find(({node}) =>
+        node.slug === "vacatures")
+    const [[name, { items }]] = JSON.parse(node.content).cards
+    return new Set(items.map(({ nodeId }) => nodeId))
+}
+
 (async () => {
+    const vacatures = findVacatures();
+    console.log(`found ${vacatures.size} vacatures`)
+
     await data.articles.edges.reduce(async (previous, {node}) => {
         await previous;
         return migrate(node, () => wp.posts());
@@ -95,6 +113,8 @@ const download = async (location) => {
 
     await data.pages.edges.reduce(async (previous, {node}) => {
         await previous;
-        return migrate(node, () => wp.pages());
+        return vacatures.has(node.id) ?
+            migrate(node, () => wp.vacatures()) :
+            migrate(node, () => wp.pages());
     }, Promise.resolve());
 })()
